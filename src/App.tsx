@@ -15,7 +15,10 @@ import {
   Flame,
   Theater,
   Clock,
-  Brain
+  Brain,
+  User,
+  Film,
+  Star
 } from 'lucide-react';
 import { 
   GameScreen, 
@@ -28,9 +31,9 @@ import {
 } from './types';
 import { DIALOGUES } from './constants';
 
-const ERAS: Era[] = ['70s', '90s', '2000s', 'Classic Era'];
-const GENRES: Genre[] = ['Comedy', 'Romance', 'Action', 'Drama'];
-const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Tough AF'];
+const ERAS: Era[] = ['70s', '90s', '1990s', '2000s', '2010s', '2020s', 'Classic Era'];
+const GENRES: Genre[] = ['Comedy', 'Romance', 'Action', 'Drama', 'Sports'];
+const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard', 'Tough AF'];
 const CATEGORIES: Category[] = ['Famous AF', 'Meme Dialogues'];
 
 export default function App() {
@@ -47,7 +50,7 @@ export default function App() {
     results: [],
   });
 
-  const [showHint, setShowHint] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [exitDirection, setExitDirection] = useState<'up' | 'left' | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -150,7 +153,7 @@ export default function App() {
           screen: isLast ? 'RESULTS' : prev.screen
         };
       });
-      setShowHint(false);
+      setIsFlipped(false);
       setExitDirection(null);
       
       if (navigator.vibrate) {
@@ -159,12 +162,39 @@ export default function App() {
     }, 100);
   };
 
+  const getFontSize = (text: string) => {
+    const length = text.length;
+    if (length > 200) return 'text-xs';
+    if (length > 150) return 'text-sm';
+    if (length > 120) return 'text-base';
+    if (length > 100) return 'text-lg';
+    if (length > 80) return 'text-xl';
+    if (length > 60) return 'text-2xl';
+    return 'text-3xl md:text-4xl';
+  };
+
+  const Branding = ({ className = "" }: { className?: string }) => (
+    <div className={`text-[10px] font-bold uppercase tracking-wider text-white/60 ${className}`}>
+      Developed by <span className="text-neon-cyan">Satwik Talegaonkar</span>
+    </div>
+  );
+
+  const HomeButton = () => (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={() => setState(prev => ({ ...prev, screen: 'HOME' }))}
+      className="absolute top-6 left-6 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+    >
+      <Home className="w-5 h-5" />
+    </motion.button>
+  );
+
   const renderHome = () => (
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center h-full px-6 text-center"
+      className="flex flex-col items-center justify-center h-full px-6 text-center relative"
     >
       <div className="absolute top-6 right-6">
         <Settings className="w-6 h-6 text-white/50" />
@@ -174,30 +204,31 @@ export default function App() {
         <motion.div
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="text-5xl font-display leading-tight tracking-tighter text-saffron neon-glow-saffron"
+          className="text-5xl font-display leading-tight tracking-tighter text-neon-purple neon-glow-purple"
         >
           🎬 BOLLYWOOD<br/>DIALOGBAAZI
         </motion.div>
+        <Branding className="mt-4" />
       </div>
 
       <div className="flex flex-col w-full gap-4 max-w-xs">
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleStartGame}
-          className="py-4 text-xl font-display bg-saffron text-black rounded-full shadow-lg shadow-saffron/20 flex items-center justify-center gap-2"
+          className="pop-button py-4 text-xl font-display bg-neon-purple text-white rounded-2xl shadow-lg shadow-neon-purple/40 flex items-center justify-center gap-2"
         >
           <Play className="fill-current" /> START GAME
         </motion.button>
 
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleQuickPlay}
-          className="py-4 text-xl font-display border-2 border-white/20 rounded-full flex items-center justify-center gap-2"
+          className="pop-button py-4 text-xl font-display border-2 border-neon-cyan text-neon-cyan rounded-2xl flex items-center justify-center gap-2"
         >
           <Dices /> QUICK PLAY
         </motion.button>
 
-        <button className="mt-4 flex items-center justify-center gap-2 text-white/60 text-sm font-medium">
+        <button className="mt-4 flex items-center justify-center gap-2 text-white/60 text-sm font-medium hover:text-neon-yellow transition-colors">
           <Trophy className="w-4 h-4" /> Leaderboard
         </button>
       </div>
@@ -209,26 +240,24 @@ export default function App() {
       initial={{ x: '100%' }} 
       animate={{ x: 0 }} 
       exit={{ x: '-100%' }}
-      className="flex flex-col h-full bg-[#0F0F0F]"
+      className="flex flex-col h-full bg-dark-bg relative"
     >
-      <div className="p-6 flex items-center justify-between">
-        <button onClick={() => setState(prev => ({ ...prev, screen: 'HOME' }))} className="flex items-center gap-1 text-white/60">
-          <ChevronLeft /> Back
-        </button>
+      <HomeButton />
+      <div className="p-6 flex items-center justify-end">
         <button 
           onClick={() => setState(prev => ({ ...prev, selectedEras: [], selectedGenres: [], selectedDifficulties: [], selectedCategories: [] }))}
-          className="text-saffron font-medium"
+          className="text-neon-yellow font-medium"
         >
           Reset
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-32">
-        <h1 className="text-2xl font-display mb-1 text-white">CURATE YOUR SETLIST</h1>
-        <p className="text-white/40 text-sm mb-8">Select one or more</p>
+        <h1 className="text-2xl font-display mb-1 text-white neon-glow-cyan">Dialogbaazi Chalu Karo!</h1>
+        <p className="text-white/40 text-sm mb-8">Choose your Poison</p>
 
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4 text-saffron">
+          <div className="flex items-center gap-2 mb-4 text-neon-yellow">
             <Flame className="w-5 h-5" />
             <h2 className="font-display tracking-wide">POPULAR</h2>
           </div>
@@ -237,7 +266,7 @@ export default function App() {
               <button
                 key={cat}
                 onClick={() => setState(prev => ({ ...prev, selectedCategories: toggleSelection(prev.selectedCategories, cat) }))}
-                className={`px-4 py-2 rounded-full border transition-all ${state.selectedCategories.includes(cat) ? 'bg-saffron border-saffron text-black' : 'border-white/10 text-white/60'}`}
+                className={`px-4 py-2 rounded-xl border transition-all pop-button ${state.selectedCategories.includes(cat) ? 'bg-neon-yellow border-neon-yellow text-black' : 'border-white/10 text-white/60'}`}
               >
                 {cat}
               </button>
@@ -246,7 +275,7 @@ export default function App() {
         </section>
 
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4 text-rani">
+          <div className="flex items-center gap-2 mb-4 text-neon-pink">
             <Theater className="w-5 h-5" />
             <h2 className="font-display tracking-wide">GENRE</h2>
           </div>
@@ -255,7 +284,7 @@ export default function App() {
               <button
                 key={genre}
                 onClick={() => setState(prev => ({ ...prev, selectedGenres: toggleSelection(prev.selectedGenres, genre) }))}
-                className={`px-4 py-2 rounded-full border transition-all ${state.selectedGenres.includes(genre) ? 'bg-rani border-rani text-white' : 'border-white/10 text-white/60'}`}
+                className={`px-4 py-2 rounded-xl border transition-all pop-button ${state.selectedGenres.includes(genre) ? 'bg-neon-pink border-neon-pink text-white' : 'border-white/10 text-white/60'}`}
               >
                 {genre}
               </button>
@@ -264,7 +293,7 @@ export default function App() {
         </section>
 
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4 text-blue-400">
+          <div className="flex items-center gap-2 mb-4 text-neon-cyan">
             <Clock className="w-5 h-5" />
             <h2 className="font-display tracking-wide">TIME / ERA</h2>
           </div>
@@ -273,7 +302,7 @@ export default function App() {
               <button
                 key={era}
                 onClick={() => setState(prev => ({ ...prev, selectedEras: toggleSelection(prev.selectedEras, era) }))}
-                className={`px-4 py-2 rounded-full border transition-all ${state.selectedEras.includes(era) ? 'bg-blue-400 border-blue-400 text-black' : 'border-white/10 text-white/60'}`}
+                className={`px-4 py-2 rounded-xl border transition-all pop-button ${state.selectedEras.includes(era) ? 'bg-neon-cyan border-neon-cyan text-black' : 'border-white/10 text-white/60'}`}
               >
                 {era}
               </button>
@@ -282,7 +311,7 @@ export default function App() {
         </section>
 
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4 text-green-400">
+          <div className="flex items-center gap-2 mb-4 text-neon-purple">
             <Brain className="w-5 h-5" />
             <h2 className="font-display tracking-wide">DIFFICULTY</h2>
           </div>
@@ -291,7 +320,7 @@ export default function App() {
               <button
                 key={diff}
                 onClick={() => setState(prev => ({ ...prev, selectedDifficulties: toggleSelection(prev.selectedDifficulties, diff) }))}
-                className={`px-4 py-2 rounded-full border transition-all ${state.selectedDifficulties.includes(diff) ? 'bg-green-400 border-green-400 text-black' : 'border-white/10 text-white/60'}`}
+                className={`px-4 py-2 rounded-xl border transition-all pop-button ${state.selectedDifficulties.includes(diff) ? 'bg-neon-purple border-neon-purple text-white' : 'border-white/10 text-white/60'}`}
               >
                 {diff}
               </button>
@@ -300,14 +329,15 @@ export default function App() {
         </section>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#0F0F0F] to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-dark-bg to-transparent flex flex-col items-center gap-4">
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleAction}
-          className="w-full py-4 text-xl font-display bg-gradient-to-r from-rani to-saffron text-white rounded-xl shadow-xl"
+          className="pop-button w-full py-4 text-xl font-display bg-gradient-to-r from-neon-purple to-neon-cyan text-white rounded-2xl shadow-xl shadow-neon-purple/20"
         >
           🎬 ACTION!
         </motion.button>
+        <Branding />
       </div>
     </motion.div>
   );
@@ -317,25 +347,27 @@ export default function App() {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center h-full px-6 text-center bg-[#1A0A10]"
+      className="flex flex-col items-center justify-center h-full px-6 text-center bg-[#1A0033] relative"
     >
+      <HomeButton />
       <div className="mb-8">
         <span className="text-6xl mb-6 block">✋</span>
-        <h1 className="text-4xl font-display mb-4 tracking-tight">PASS THE PHONE</h1>
+        <h1 className="text-4xl font-display mb-4 tracking-tight neon-glow-purple">PASS THE PHONE</h1>
         <p className="text-white/60 text-lg">Give the device to the<br/>next "Dialogbaaz"</p>
       </div>
 
       <motion.button
         whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        animate={{ boxShadow: ["0 0 0px rgba(255,153,51,0)", "0 0 30px rgba(255,153,51,0.4)", "0 0 0px rgba(255,153,51,0)"] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        whileTap={{ scale: 0.9 }}
+        animate={{ boxShadow: ["0 0 0px rgba(176,38,255,0)", "0 0 40px rgba(176,38,255,0.6)", "0 0 0px rgba(176,38,255,0)"] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
         onClick={() => setState(prev => ({ ...prev, screen: 'GAMEPLAY' }))}
-        className="w-40 h-40 rounded-full bg-saffron flex flex-col items-center justify-center text-black gap-2"
+        className="pop-button w-44 h-44 rounded-full bg-neon-purple flex flex-col items-center justify-center text-white gap-2"
       >
         <Eye className="w-10 h-10" />
-        <span className="font-display text-sm">REVEAL CARD</span>
+        <span className="font-display text-sm uppercase tracking-widest">Start Round</span>
       </motion.button>
+      <Branding className="absolute bottom-8" />
     </motion.div>
   );
 
@@ -348,56 +380,93 @@ export default function App() {
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
-        className="flex flex-col h-full p-6"
+        className="flex flex-col h-full p-6 relative"
       >
-        <div className="flex items-center justify-between mb-8">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${state.timer < 10 ? 'border-red-500 text-red-500 neon-glow-rani animate-pulse' : 'border-white/20 text-white/60'}`}>
+        <HomeButton />
+        <div className="flex items-center justify-between mb-8 pl-14">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${state.timer < 10 ? 'border-neon-pink text-neon-pink neon-glow-pink animate-pulse' : 'border-white/20 text-white/60'}`}>
             <TimerIcon className="w-4 h-4" />
             <span className="font-display text-lg">{String(Math.floor(state.timer / 60)).padStart(2, '0')}:{String(state.timer % 60).padStart(2, '0')}</span>
           </div>
-          <div className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
+          <div className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
             <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Score</span>
-            <span className="font-display text-saffron">{String(state.score).padStart(2, '0')}</span>
+            <span className="font-display text-neon-cyan">{String(state.score).padStart(2, '0')}</span>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="flex-1 flex flex-col items-center justify-center perspective-1000">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentDialogue.id}
-              initial={{ scale: 0.8, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
+              initial={{ scale: 0.8, opacity: 0, rotateY: 0 }}
+              animate={{ scale: 1, opacity: 1, rotateY: isFlipped ? 180 : 0 }}
               exit={exitDirection === 'up' 
                 ? { y: -500, opacity: 0, scale: 1.1, transition: { duration: 0.4 } } 
                 : { x: -500, opacity: 0, rotate: -10, transition: { duration: 0.4 } }
               }
-              className="glass-card w-full max-w-sm aspect-[3/4] rounded-3xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl"
+              transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+              className="w-full max-w-sm aspect-[3/4] relative preserve-3d"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-saffron/30 to-transparent" />
-              
-              <span className="text-4xl mb-6 opacity-20">"</span>
-              <h2 className="text-3xl md:text-4xl font-serif italic leading-relaxed text-white">
-                {currentDialogue.text}
-              </h2>
-              <span className="text-4xl mt-6 opacity-20">"</span>
+              {/* Front Side (Hidden State) */}
+              <div className="absolute inset-0 glass-card rounded-3xl p-8 flex flex-col items-center justify-center text-center backface-hidden shadow-2xl border-2 border-white/5">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-neon-purple via-neon-cyan to-neon-pink" />
+                
+                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10">
+                  <Eye className="w-10 h-10 text-neon-purple animate-pulse" />
+                </div>
+                
+                <h2 className="text-2xl font-display text-white mb-2 tracking-tight">READY TO REVEAL?</h2>
+                <p className="text-white/40 text-sm mb-12">Tap the button below to see the dialogue and details.</p>
 
-              <div className="mt-12 w-full">
-                {showHint ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-saffron font-display tracking-widest text-sm uppercase"
-                  >
-                    🎬 {currentDialogue.movie}
-                  </motion.div>
-                ) : (
-                  <button 
-                    onClick={() => setShowHint(true)}
-                    className="text-white/30 text-xs font-medium uppercase tracking-widest border-b border-white/10 pb-1"
-                  >
-                    Tap to see movie hint (-1 pt)
-                  </button>
-                )}
+                <motion.button 
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsFlipped(true)}
+                  className="pop-button px-8 py-4 bg-neon-purple text-white rounded-2xl font-display tracking-widest shadow-lg shadow-neon-purple/40"
+                >
+                  REVEAL CARD
+                </motion.button>
+              </div>
+
+              {/* Back Side (The Full Reveal) */}
+              <div className="absolute inset-0 glass-card rounded-3xl p-6 flex flex-col items-center justify-center text-center backface-hidden rotate-y-180 shadow-2xl border-2 border-neon-cyan/30 overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-cyan" />
+                
+                <div className="flex-1 flex flex-col items-center justify-center w-full space-y-4">
+                  <div className="grid grid-cols-3 gap-2 w-full">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1 text-neon-cyan">
+                        <Film className="w-3 h-3" />
+                        <span className="text-[8px] font-bold uppercase tracking-wider opacity-60">Movie</span>
+                      </div>
+                      <h3 className="text-[11px] font-display text-white">{currentDialogue.movieFull}</h3>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1 text-neon-purple">
+                        <User className="w-3 h-3" />
+                        <span className="text-[8px] font-bold uppercase tracking-wider opacity-60">Character</span>
+                      </div>
+                      <h3 className="text-[11px] font-display text-white/90">{currentDialogue.characterFull}</h3>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1 text-neon-yellow">
+                        <Star className="w-3 h-3" />
+                        <span className="text-[8px] font-bold uppercase tracking-wider opacity-60">Actor</span>
+                      </div>
+                      <h3 className="text-[11px] font-display text-white/80">{currentDialogue.actor}</h3>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10 w-full flex-1 flex flex-col justify-center overflow-hidden">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-neon-pink mb-2 opacity-60">The Dialogue</div>
+                    <div className="flex-1 flex items-center justify-center overflow-hidden">
+                      <h2 className={`${getFontSize(currentDialogue.dialogue)} font-serif italic leading-relaxed text-white neon-glow-purple px-2 max-h-full overflow-hidden`}>
+                        "{currentDialogue.dialogue}"
+                      </h2>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -405,20 +474,21 @@ export default function App() {
 
         <div className="flex gap-4 mt-8">
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleGuess(false)}
-            className="flex-1 py-4 rounded-2xl border-2 border-white/10 text-white/60 font-display flex items-center justify-center gap-2"
+            className="pop-button flex-1 py-4 rounded-2xl border-2 border-white/5 bg-white/5 text-white/40 font-display flex items-center justify-center gap-2"
           >
             <FastForward className="w-5 h-5" /> SKIP
           </motion.button>
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleGuess(true)}
-            className="flex-1 py-4 rounded-2xl bg-saffron text-black font-display flex items-center justify-center gap-2 shadow-lg shadow-saffron/20"
+            className="pop-button flex-1 py-4 rounded-2xl bg-gradient-to-r from-neon-cyan to-neon-purple text-white font-display flex items-center justify-center gap-2 shadow-lg shadow-neon-cyan/20"
           >
             <Check className="w-5 h-5" /> GUESSED
           </motion.button>
         </div>
+        <Branding className="mt-6 text-center" />
       </motion.div>
     );
   };
@@ -427,28 +497,33 @@ export default function App() {
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }} 
       animate={{ opacity: 1, scale: 1 }} 
-      className="flex flex-col h-full p-6"
+      className="flex flex-col h-full p-6 relative"
     >
+      <HomeButton />
       <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <span className="text-6xl mb-4">🎉</span>
-        <h1 className="text-4xl font-display mb-2">THAT'S A WRAP!</h1>
-        <div className="text-2xl text-saffron font-display mb-8">
+        <span className="text-6xl mb-4">🏆</span>
+        <h1 className="text-4xl font-display mb-2 neon-glow-purple">THAT'S A WRAP!</h1>
+        <div className="text-2xl text-neon-cyan font-display mb-8">
           Your Score: {state.score}/{state.currentRoundDialogues.length}
         </div>
 
-        <div className="w-full max-w-sm glass-card rounded-2xl p-6 text-left">
-          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">The Highlights</h3>
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+        <div className="w-full max-w-sm glass-card rounded-3xl p-6 text-left border border-white/10">
+          <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">The Highlights</h3>
+          <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {state.results.map((res, i) => (
-              <div key={i} className="flex items-start gap-3">
+              <div key={i} className="flex items-start gap-3 group">
                 {res.guessed ? (
-                  <Check className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-neon-cyan/20 flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 text-neon-cyan" />
+                  </div>
                 ) : (
-                  <FastForward className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div className="w-6 h-6 rounded-full bg-neon-pink/20 flex items-center justify-center shrink-0">
+                    <FastForward className="w-3 h-3 text-neon-pink" />
+                  </div>
                 )}
                 <div>
-                  <div className="text-sm font-medium text-white/90 line-clamp-1 italic">"{res.dialogue.text}"</div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-wider">{res.dialogue.movie} ({res.dialogue.era})</div>
+                  <div className="text-sm font-medium text-white/90 line-clamp-1 italic group-hover:text-neon-cyan transition-colors">"{res.dialogue.dialogue}"</div>
+                  <div className="text-[10px] text-white/30 uppercase tracking-wider">{res.dialogue.movieFull}</div>
                 </div>
               </div>
             ))}
@@ -458,18 +533,13 @@ export default function App() {
 
       <div className="flex flex-col gap-4 mt-8">
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setState(prev => ({ ...prev, screen: 'CATEGORY' }))}
-          className="w-full py-4 bg-saffron text-black font-display rounded-xl flex items-center justify-center gap-2"
+          className="pop-button w-full py-4 bg-neon-purple text-white font-display rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-neon-purple/30"
         >
           <RotateCcw className="w-5 h-5" /> PLAY AGAIN
         </motion.button>
-        <button 
-          onClick={() => setState(prev => ({ ...prev, screen: 'HOME' }))}
-          className="w-full py-2 text-white/40 font-display text-sm flex items-center justify-center gap-2"
-        >
-          <Home className="w-4 h-4" /> MAIN MENU
-        </button>
+        <Branding className="text-center" />
       </div>
     </motion.div>
   );

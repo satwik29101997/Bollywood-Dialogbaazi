@@ -47,6 +47,8 @@ export default function App() {
     currentIndex: 0,
     score: 0,
     timer: 60,
+    timerDuration: 60,
+    isTimerEnabled: true,
     results: [],
   });
 
@@ -55,6 +57,7 @@ export default function App() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startTimer = useCallback(() => {
+    if (!state.isTimerEnabled) return;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setState(prev => {
@@ -89,7 +92,7 @@ export default function App() {
       currentRoundDialogues: shuffled,
       currentIndex: 0,
       score: 0,
-      timer: 60,
+      timer: prev.timerDuration,
       results: [],
       screen: 'PASS_PHONE'
     }));
@@ -130,7 +133,7 @@ export default function App() {
       currentRoundDialogues: shuffled,
       currentIndex: 0,
       score: 0,
-      timer: 60,
+      timer: prev.timerDuration,
       results: [],
       screen: 'PASS_PHONE'
     }));
@@ -231,6 +234,37 @@ export default function App() {
         <button className="mt-4 flex items-center justify-center gap-2 text-white/60 text-sm font-medium hover:text-neon-yellow transition-colors">
           <Trophy className="w-4 h-4" /> Leaderboard
         </button>
+
+        <div className="mt-8 p-4 rounded-2xl bg-white/5 border border-white/10 w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest">
+              <TimerIcon className="w-3 h-3" /> Timer
+            </div>
+            <button 
+              onClick={() => setState(prev => ({ ...prev, isTimerEnabled: !prev.isTimerEnabled }))}
+              className={`w-10 h-5 rounded-full transition-colors relative ${state.isTimerEnabled ? 'bg-neon-cyan' : 'bg-white/10'}`}
+            >
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${state.isTimerEnabled ? 'left-5.5' : 'left-0.5'}`} />
+            </button>
+          </div>
+          {state.isTimerEnabled && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] text-white/40 uppercase tracking-widest">
+                <span>Duration</span>
+                <span className="text-neon-cyan">{state.timerDuration}s</span>
+              </div>
+              <input 
+                type="range" 
+                min="10" 
+                max="120" 
+                step="5"
+                value={state.timerDuration}
+                onChange={(e) => setState(prev => ({ ...prev, timerDuration: parseInt(e.target.value) }))}
+                className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-neon-cyan"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -255,6 +289,42 @@ export default function App() {
       <div className="flex-1 overflow-y-auto px-6 pb-32">
         <h1 className="text-2xl font-display mb-1 text-white neon-glow-cyan">Dialogbaazi Chalu Karo!</h1>
         <p className="text-white/40 text-sm mb-8">Choose your Poison</p>
+
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4 text-neon-cyan">
+            <TimerIcon className="w-5 h-5" />
+            <h2 className="font-display tracking-wide uppercase">Timer Settings</h2>
+          </div>
+          <div className="space-y-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+            <div className="flex items-center justify-between">
+              <span className="text-white/60 text-sm">Enable Timer</span>
+              <button 
+                onClick={() => setState(prev => ({ ...prev, isTimerEnabled: !prev.isTimerEnabled }))}
+                className={`w-12 h-6 rounded-full transition-colors relative ${state.isTimerEnabled ? 'bg-neon-cyan' : 'bg-white/10'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${state.isTimerEnabled ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
+            
+            {state.isTimerEnabled && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-white/40">
+                  <span>Duration</span>
+                  <span className="text-neon-cyan font-bold">{state.timerDuration}s</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="10" 
+                  max="120" 
+                  step="5"
+                  value={state.timerDuration}
+                  onChange={(e) => setState(prev => ({ ...prev, timerDuration: parseInt(e.target.value) }))}
+                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-neon-cyan"
+                />
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4 text-neon-yellow">
@@ -384,10 +454,17 @@ export default function App() {
       >
         <HomeButton />
         <div className="flex items-center justify-between mb-8 pl-14">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${state.timer < 10 ? 'border-neon-pink text-neon-pink neon-glow-pink animate-pulse' : 'border-white/20 text-white/60'}`}>
-            <TimerIcon className="w-4 h-4" />
-            <span className="font-display text-lg">{String(Math.floor(state.timer / 60)).padStart(2, '0')}:{String(state.timer % 60).padStart(2, '0')}</span>
-          </div>
+          {state.isTimerEnabled ? (
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${state.timer < 10 ? 'border-neon-pink text-neon-pink neon-glow-pink animate-pulse' : 'border-white/20 text-white/60'}`}>
+              <TimerIcon className="w-4 h-4" />
+              <span className="font-display text-lg">{String(Math.floor(state.timer / 60)).padStart(2, '0')}:{String(state.timer % 60).padStart(2, '0')}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-white/40">
+              <Clock className="w-4 h-4" />
+              <span className="font-display text-sm uppercase tracking-widest">Zen Mode</span>
+            </div>
+          )}
           <div className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
             <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Score</span>
             <span className="font-display text-neon-cyan">{String(state.score).padStart(2, '0')}</span>

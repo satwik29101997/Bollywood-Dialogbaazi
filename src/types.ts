@@ -28,6 +28,8 @@ export interface GameState {
   currentIndex: number;
   score: number;
   timer: number;
+  timerDuration: number;
+  isTimerEnabled: boolean;
   results: {
     dialogue: Dialogue;
     guessed: boolean;
